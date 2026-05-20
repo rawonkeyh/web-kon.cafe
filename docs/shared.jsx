@@ -93,15 +93,24 @@ function PhotoTile({ tone = 'a', cap, style, rotate = 0, children }) {
 }
 
 // ─── Polaroid (taped) ────────────────────────────────────────────
-function Polaroid({ tone='a', caption, rotate=0, w=200, h=240, style, tape='top' }) {
-  return (
+function Polaroid({ tone='a', caption, rotate=0, w=200, h=240, style, tape='top', img, href }) {
+  const photoH = h - 60;
+  const photo = img ? (
+    <div style={{width:'100%', height:photoH, overflow:'hidden', position:'relative', background:'#2A1A12'}}>
+      <img src={img} alt={caption || ''} loading="lazy"
+        style={{width:'100%', height:'100%', objectFit:'cover', display:'block'}}/>
+    </div>
+  ) : (
+    <PhotoTile tone={tone} cap={caption} style={{width:'100%',height:photoH}}/>
+  );
+  const card = (
     <div style={{
       position:'relative', width:w, padding:'12px 12px 36px', background:'#FBFAF1',
       boxShadow:'0 6px 16px rgba(20,30,15,0.18)', transform:`rotate(${rotate}deg)`,
       ...style,
     }}>
-      <PhotoTile tone={tone} cap={caption} style={{width:'100%',height:h-60}}/>
-      <div style={{position:'absolute',left:18,bottom:8,fontFamily:"'Caveat',cursive",fontSize:18,color:'#3a3a30'}}>
+      {photo}
+      <div style={{position:'absolute',left:18,bottom:8,right:18,fontFamily:"'Caveat',cursive",fontSize:18,color:'#3a3a30',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
         {caption || '—'}
       </div>
       {tape==='top' && <div className="tape" style={{top:-10,left:'50%',transform:'translateX(-50%) rotate(-3deg)'}}/>}
@@ -111,6 +120,7 @@ function Polaroid({ tone='a', caption, rotate=0, w=200, h=240, style, tape='top'
       </>}
     </div>
   );
+  return href ? <a href={href} target="_blank" rel="noreferrer" style={{textDecoration:'none', color:'inherit', display:'block'}}>{card}</a> : card;
 }
 
 // ─── Hand-scribbled arrow ────────────────────────────────────────

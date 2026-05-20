@@ -2,6 +2,14 @@
 // Paper-feeling page. Polaroids, sticky notes, handwritten subheads.
 // More character than A, more order than C.
 
+const BEHOLD_FEED_URL = 'https://feeds.behold.so/GIstEmcXuNk3WTtdBQs4';
+
+function shortCaption(text, max = 32) {
+  if (!text) return '';
+  const firstLine = text.split('\n')[0].trim();
+  return firstLine.length > max ? firstLine.slice(0, max - 1) + '…' : firstLine;
+}
+
 function LandingB({ show = {} }) {
   const s = {
     hero: show.hero ?? true,
@@ -12,6 +20,22 @@ function LandingB({ show = {} }) {
     insta: show.insta ?? true,
     footer: show.footer ?? true,
   };
+
+  const [instaPosts, setInstaPosts] = React.useState(null);
+  React.useEffect(() => {
+    if (!s.insta) return;
+    fetch(BEHOLD_FEED_URL)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => {
+        const posts = (data.posts || []).slice(0, 6).map(p => ({
+          img: (p.sizes && p.sizes.medium && p.sizes.medium.mediaUrl) || p.thumbnailUrl || p.mediaUrl,
+          caption: shortCaption(p.prunedCaption || p.caption),
+          href: p.permalink,
+        }));
+        setInstaPosts(posts);
+      })
+      .catch(err => console.warn('behold fetch failed', err));
+  }, [s.insta]);
 
   const W = 1440;
 
@@ -193,8 +217,13 @@ function LandingB({ show = {} }) {
             <a style={btnB}>follow along →</a>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(6,1fr)', gap:18 }}>
-            {KC_INSTA.map((i, k) => (
-              <Polaroid key={k} tone={i.tone} caption={i.cap} w={null} h={200}
+            {(instaPosts && instaPosts.length === 6 ? instaPosts : KC_INSTA).map((i, k) => (
+              <Polaroid key={k}
+                tone={i.tone || KC_INSTA[k].tone}
+                caption={i.caption || i.cap}
+                img={i.img}
+                href={i.href}
+                w={null} h={200}
                 rotate={[-3,2,-1.5,1.5,-2,1][k]}
                 style={{ width:'100%' }}/>
             ))}
